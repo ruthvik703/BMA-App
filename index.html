@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="shortcut icon" type="image/png" href="/logo.png" />
+    <script>
+      (function() {
+        const img = new Image();
+        img.src = '/logo.png';
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = 128;
+          canvas.height = 128;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            // Draw circle clip
+            ctx.beginPath();
+            ctx.arc(64, 64, 62, 0, 2 * Math.PI);
+            ctx.clip();
+            // Draw logo image
+            ctx.drawImage(img, 0, 0, 128, 128);
+            
+            // Add a subtle border to mimic app logo design
+            ctx.strokeStyle = '#18181b'; // zinc-900 color
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            const roundedUrl = canvas.toDataURL('image/png');
+            const links = document.querySelectorAll("link[rel*='icon']");
+            links.forEach(link => {
+              link.href = roundedUrl;
+            });
+          }
+        };
+      })();
+    </script>
+    <title>Buckner Martial Arts</title>
+    <meta name="description" content="Ceremony preparation, eligibility tracking, and belt label/sticker sheet generation for student promotions." />
+    <meta property="og:title" content="Buckner Martial Arts" />
+    <meta property="og:description" content="Ceremony preparation, eligibility tracking, and belt label/sticker sheet generation for student promotions." />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

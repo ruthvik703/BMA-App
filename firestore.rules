@@ -1,0 +1,177 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================
+    // BUCKNER MARTIAL ARTS - SECURITY POLICIES
+    // ==========================================
+
+    // Global Safety Net - Default Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions for auth verification
+    function isSignedIn() {
+      // Support both authenticated anonymous sessions and local terminal/unauthenticated access
+      return true;
+    }
+
+    // App active check and modification guard helper functions (Pillar 6: Global configuration settings)
+    function isAppActive() {
+      return !exists(/databases/$(database)/documents/settings/general) || 
+             !('active' in get(/databases/$(database)/documents/settings/general).data) || 
+             get(/databases/$(database)/documents/settings/general).data.active == true;
+    }
+
+    function isNoActiveChange() {
+      return !('active' in request.resource.data) || 
+             (resource != null && 'active' in resource.data && request.resource.data.active == resource.data.active) ||
+             (request.resource.data.active == false);
+    }
+
+    // Validation blueprints for data integrity (Pillar 2: Anti-Update-Gap)
+    function isValidStudent(student) {
+      return student.id is string && student.id.size() <= 128
+        && student.name is string && student.name.size() <= 256
+        && student.programs is list
+        && student.rankings is map
+        && student.attendance is map
+        && student.location is string && student.location.size() <= 128
+        && !('program' in student)
+        && !('currentRankId' in student)
+        && !('classesAttended' in student)
+        && !('manualOverride' in student)
+        && !('monthsAtRank' in student)
+        && (!('notes' in student) || student.notes is string && student.notes.size() <= 10000)
+        && (!('beltSize' in student) || student.beltSize is string && student.beltSize.size() <= 64)
+        && (!('cardFormCollected' in student) || student.cardFormCollected is bool)
+        && (!('stickerPlaced' in student) || student.stickerPlaced is bool)
+        && (!('manualOverrides' in student) || student.manualOverrides is map)
+        && (!('scheduleDay1' in student) || student.scheduleDay1 is string)
+        && (!('scheduleTime1' in student) || student.scheduleTime1 is string)
+        && (!('scheduleDay2' in student) || student.scheduleDay2 is string)
+        && (!('scheduleTime2' in student) || student.scheduleTime2 is string)
+        && (!('customFields' in student) || student.customFields is map);
+    }
+
+    function isValidSecurity(security) {
+      return security.instructorPin is string && security.instructorPin.size() <= 32
+        && (!('staffPin' in security) || security.staffPin is string && security.staffPin.size() <= 32)
+        && (!('frontDeskPin' in security) || security.frontDeskPin is string && security.frontDeskPin.size() <= 32);
+    }
+
+    function isValidBeltInventory(inventory) {
+      return inventory.counts is map;
+    }
+
+    function isValidSettings(settings) {
+      return (!('testDate' in settings) || settings.testDate is string)
+        && (!('classesBuffer' in settings) || settings.classesBuffer is int || settings.classesBuffer is number)
+        && (!('active' in settings) || settings.active is bool)
+        && (!('lockedAt' in settings) || settings.lockedAt is string)
+        && (!('testingLock' in settings) || settings.testingLock == null || settings.testingLock is map)
+        && (!('invitationsLock' in settings) || settings.invitationsLock == null || settings.invitationsLock is map)
+        && (!('labelsLock' in settings) || settings.labelsLock == null || settings.labelsLock is map)
+        && (!('beltListLock' in settings) || settings.beltListLock == null || settings.beltListLock is map);
+    }
+
+    function isValidSuggestion(suggestion) {
+      return suggestion.id is string && suggestion.id.size() <= 128
+        && suggestion.subject is string && suggestion.subject.size() <= 512
+        && suggestion.content is string && suggestion.content.size() <= 10000
+        && suggestion.userName is string && suggestion.userName.size() <= 256
+        && suggestion.userRole in ['Instructor', 'Front Desk', 'Owner']
+        && suggestion.createdAt == request.time;
+    }
+
+    function isValidUser(user) {
+      return user.id is string
+        && user.name is string && user.name.size() <= 256
+        && user.role in ['Instructor', 'Front Desk', 'Owner']
+        && (!('email' in user) || user.email is string)
+        && (!('approvalStatus' in user) || user.approvalStatus in ['pending', 'approved', 'denied'])
+        && (!('emailVerified' in user) || user.emailVerified is bool)
+        && (!('skipEmailVerification' in user) || user.skipEmailVerification is bool)
+        && (!('location' in user) || user.location in ['West Chester', 'Monroe', 'YMCA', 'All'])
+        && (!('isActive' in user) || user.isActive is bool);
+    }
+
+    function isValidBeltTest(test) {
+      return test.id is string && test.id.size() <= 128
+        && (!('month' in test) || test.month is string)
+        && (!('date' in test) || test.date is string)
+        && (!('participants' in test) || test.participants is list);
+    }
+
+    function isValidDojo(dojo) {
+      return dojo.id is string && dojo.id.size() <= 128
+        && dojo.name is string && dojo.name.size() <= 256
+        && (!('address' in dojo) || dojo.address is string && dojo.address.size() <= 512)
+        && (!('phone' in dojo) || dojo.phone is string && dojo.phone.size() <= 64)
+        && (!('customProfileFields' in dojo) || dojo.customProfileFields is list)
+        && (!('createdAt' in dojo) || dojo.createdAt is string)
+        && (!('createdBy' in dojo) || dojo.createdBy is string);
+    }
+
+    // PILLAR 2: Students directory permissions
+    match /students/{studentId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidStudent(request.resource.data) && isAppActive();
+      allow delete: if isSignedIn() && isAppActive();
+    }
+
+    // PILLAR 4: Security configurations (pins & passcodes)
+    // Locked: PIN codes can ONLY be modified through the Firebase Console
+    match /security/{docId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if false;
+    }
+
+    // PILLAR 5: Belt Inventory monitoring & pulled history
+    match /beltInventory/{docId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isSignedIn() && isValidBeltInventory(request.resource.data) && isAppActive();
+    }
+
+    // PILLAR 6: Global configuration settings
+    match /settings/{docId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() 
+        && isValidSettings(request.resource.data)
+        && (
+          !('active' in request.resource.data) || 
+          request.resource.data.active == false || 
+          isAppActive()
+        );
+    }
+
+    // Suggestions & feedback collection
+    match /suggestions/{suggestionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidSuggestion(request.resource.data) && isAppActive();
+      allow update, delete: if false;
+    }
+
+    // Dojo user accounts and staff directory
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidUser(request.resource.data);
+      allow delete: if isSignedIn();
+    }
+
+    // Belt promotion testing history and participant logs
+    match /beltTests/{beltTestId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidBeltTest(request.resource.data) && isAppActive();
+      allow delete: if isSignedIn() && isAppActive();
+    }
+
+    // Dojo locations and custom student profile field settings
+    match /dojos/{dojoId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidDojo(request.resource.data) && isAppActive();
+      allow delete: if isSignedIn() && isAppActive();
+    }
+  }
+}

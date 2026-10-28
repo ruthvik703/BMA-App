@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --color-red-650: #cf1d1d;
+  --color-red-555: #ef4444;
+}
+
+/* 
+  Global Screen Level background setup.
+  This ensures that custom dark background colors stretch extra up and down,
+  fully filling the viewport on mobile devices without adding unwanted scrolling.
+*/
+html, body {
+  background-color: #09090b; /* bg-zinc-950 equivalent */
+  color: #f4f4f5; /* text-zinc-100 equivalent */
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  touch-action: manipulation;
+}
+
+#root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 
+  Global Media Print Overrides.
+  - Automatically suppresses browser-added headers & footers (dates, links, page counts, etc.)
+  - Standardizes the page layout grid system to prevent unwanted horizontal shifts or off-center sheets
+  - Ensures background graphics, colors, badges, and borders are always preserved on print
+*/
+@media print {
+  @page {
+    margin: 0;
+  }
+
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  html, body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    background: white !important;
+    background-color: white !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    box-shadow: none !important;
+  }
+
+  #root, main {
+    background: transparent !important;
+    background-color: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    box-shadow: none !important;
+  }
+
+  /* Universal hide selector for print-restricted controls and navigation rails */
+  .print\:hidden, #header-and-nav, .controls-bar, .dashboard-stats {
+    display: none !important;
+  }
+}

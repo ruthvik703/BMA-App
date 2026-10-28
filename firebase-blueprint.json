@@ -1,0 +1,162 @@
+{
+  "entities": {
+    "student": {
+      "title": "Student",
+      "description": "Student candidate for belt promotion testing",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "programs": { "type": "array", "items": { "type": "string" } },
+        "rankings": { "type": "object" },
+        "attendance": { "type": "object" },
+        "manualOverrides": { "type": "object" },
+        "location": { "type": "string" },
+        "notes": { "type": "string" },
+        "beltSize": { "type": "string" },
+        "cardFormCollected": { "type": "boolean" },
+        "stickerPlaced": { "type": "boolean" },
+        "checklist": {
+          "type": "object",
+          "properties": {
+            "attendanceVerified": { "type": "boolean" },
+            "kataMastered": { "type": "boolean" },
+            "feePaid": { "type": "boolean" }
+          },
+          "required": ["attendanceVerified", "kataMastered", "feePaid"]
+        }
+      },
+      "required": ["id", "name", "programs", "rankings", "attendance", "location"]
+    },
+    "user": {
+      "title": "User",
+      "description": "App users with role permissions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["Instructor", "Front Desk", "Owner"] },
+        "email": { "type": "string" },
+        "approvalStatus": { "type": "string", "enum": ["pending", "approved", "denied"] },
+        "emailVerified": { "type": "boolean" },
+        "location": { "type": "string", "enum": ["West Chester", "Monroe", "YMCA", "All"] },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "lastLogin": { "type": "string" }
+      },
+      "required": ["id", "name", "role"]
+    },
+    "securityConfig": {
+      "title": "SecurityConfig",
+      "description": "Dojo security settings and access PIN key codes",
+      "type": "object",
+      "properties": {
+        "instructorPin": { "type": "string" },
+        "staffPin": { "type": "string" },
+        "frontDeskPin": { "type": "string" },
+        "lastUpdated": { "type": "string" }
+      },
+      "required": ["instructorPin"]
+    },
+    "beltInventory": {
+      "title": "BeltInventory",
+      "description": "Inventory pull-list of belts that have been pulled for an upcoming test",
+      "type": "object",
+      "properties": {
+        "counts": { "type": "object" },
+        "lastUpdated": { "type": "string" }
+      },
+      "required": ["counts"]
+    },
+    "suggestion": {
+      "title": "Suggestion",
+      "description": "User feedback and feature suggestions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "subject": { "type": "string" },
+        "content": { "type": "string" },
+        "userName": { "type": "string" },
+        "userRole": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "subject", "content", "userName", "userRole", "createdAt"]
+    },
+    "beltTest": {
+      "title": "BeltTest",
+      "description": "Belt promotion testing history and participant results",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "month": { "type": "string" },
+        "date": { "type": "string" },
+        "participants": { "type": "array" }
+      },
+      "required": ["id"]
+    },
+    "dojo": {
+      "title": "Dojo",
+      "description": "Dojo location and student profile customizable fields configuration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "customProfileFields": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "General application settings including active flag, test date, and buffer classes",
+      "type": "object",
+      "properties": {
+        "testDate": { "type": "string" },
+        "classesBuffer": { "type": "number" },
+        "active": { "type": "boolean" },
+        "lockedAt": { "type": "string" },
+        "testingLock": { "type": "object" },
+        "invitationsLock": { "type": "object" },
+        "labelsLock": { "type": "object" },
+        "beltListLock": { "type": "object" }
+      }
+    }
+  },
+  "firestore": {
+    "/settings/{docId}": {
+      "schema": "settings",
+      "description": "General application/dojo settings including testing eligibility configurations and system active status"
+    },
+    "/students/{studentId}": {
+      "schema": "student",
+      "description": "Collection of students in the dojo roster and test list"
+    },
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "Collection of active users, instructors and front desk agents"
+    },
+    "/security/{docId}": {
+      "schema": "securityConfig",
+      "description": "Access codes configuration rules"
+    },
+    "/beltInventory/{docId}": {
+      "schema": "beltInventory",
+      "description": "Inventory tracking for belts in preparation"
+    },
+    "/suggestions/{suggestionId}": {
+      "schema": "suggestion",
+      "description": "Feedback and suggestions submitted by of app users"
+    },
+    "/beltTests/{beltTestId}": {
+      "schema": "beltTest",
+      "description": "Belt promotion testing history and participant logs"
+    },
+    "/dojos/{dojoId}": {
+      "schema": "dojo",
+      "description": "Dojo locations and student profile field custom configurations"
+    }
+  }
+}

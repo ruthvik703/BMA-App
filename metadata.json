@@ -1,0 +1,6 @@
+{
+  "name": "Buckner Martial Arts",
+  "description": "Ceremony preparation, eligibility tracking, and belt label/sticker sheet generation for student promotions.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
